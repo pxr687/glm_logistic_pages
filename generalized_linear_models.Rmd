@@ -1,0 +1,179 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.15.2
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+## Generalized Linear Models
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+from jupyprint import jupyprint, arraytex
+```
+
+By now you are very familiar with the linear regression: its purpose, its fitting procedure, and its mathematical notation.
+
+In the language of Culture One, you'll see linear regression referred to as the foundational statistical model.
+
+In the language of Culture Two, you'll see linear regression referred to as one of the foundational machine learning algorithms.
+
+If you think of the linear regression model as a tool, today we are going to look at extensions and generalizations which turn it into a full Swiss Army Knife.
+
+The benefit of extending the linear model apparatus is that we preserve the interpretable parameters, even when we generalize it so that it can be used more flexibly with different types of data sets.
+
+To explore how these extensions and generalizations work, let's revist the now familiar mathematical notation for the linear regression model.
+
+So, where there are $k$ predictor variables, the linear regression model is:
+
+$ \Large \hat{y_i} = b_0 + b_1 x_{1i} + ... b_k x_{ki} $
+
+Let's keep it simple for now and use just one predictor (but it all generalizes to multiple predictors also):
+
+$ \Large \hat{y_i} = b_0 + b_1 x_{i} $
+
+Another way of writing this - which makes it easier to understand the generalizations of the model - is to use the notation of conditional probability, which is:
+
+$ \Large E(y_i|x_{i}) = b_0 + b_1 x_{i} $
+
+In english this reads as:
+
+- "the expected value of $y_i$, given the value of $x_i$ is equal to $b_0 + b_1 x_{i}$" 
+- ... or ...
+- "the expected value of $y_i$ is a linear function of $x_i$ with the slope $b_1$ and the intercept $b_0$".
+
+Let's represent "$E(y_i|x_{1i})$" using the symbol "$\hat{\mu}_i$" (this symbol is called "mu", and the "hat" symbol indicates that this is a prediction from a model rather than a raw data value).
+
+Using this new notation, we can now write the linear regression model as:
+
+$ \Large \hat{\mu}_i = b_0 + b_1 x_{1i} $
+
+Now let's write a really boring python function, called $f()$:
+
+```{python}
+def f(mu):
+    
+    result = mu * 1
+    
+    return result
+```
+
+<!-- #region -->
+<b>Question: </b> just from looking at the function, which of these would be true:
+
+$ \Large \hat{\mu}_i \neq f(\hat{\mu}_i)$
+
+or
+
+$ \Large \hat{\mu}_i == f(\hat{\mu}_i)$
+
+
+Let's test this out with some simulated data, and a simulated slope and intercept.
+<!-- #endregion -->
+
+```{python}
+# our simulated predictor variable scores
+x = np.array([4, 6, 9, 2, 6, 7, 3, 3, 6, 7])
+
+# simulated intercept
+b_0 = 1
+
+# simulated slope
+b_1 = 2
+```
+
+Let's calculate mu ($\hat{\mu}$) using our simulated data and parameters:
+
+```{python}
+# calculate mu
+mu = b_0 + b_1 * x
+
+mu
+```
+
+```{python}
+# print the formalism of the mu calculation
+jupyprint("$\Large \hat{\mu}_i = b_0 + b_1 x_{1i} $")
+```
+
+```{python}
+# show the calculation showing the values of our simulated data/slope/intercept
+jupyprint("$\Large \hat{\mu_i} ="+f" {b_0} + {b_1} * {arraytex(np.atleast_2d(x).T)} $")
+```
+
+```{python}
+# show the values of the mu vector
+jupyprint(f"$\Large {arraytex(np.atleast_2d(mu).T)} = {b_0} + {b_1} * {arraytex(np.atleast_2d(x).T)} $")
+```
+
+Let's investigate the correct answer to the question of which of these statements is true:
+
+$ \Large \hat{\mu}_i \neq f(\hat{\mu}_i)$
+
+or
+
+$ \Large \hat{\mu}_i == f(\hat{\mu}_i)$
+
+```{python}
+# see what our f() function does, when applied to the mu vector
+f(mu)
+```
+
+```{python}
+# show the original mu vector
+mu
+```
+
+```{python}
+# are all the values the same?
+all(f(mu) == mu)
+```
+
+<!-- #region -->
+Let's call $f()$, as we defined it above, the "identity function", because whatever input we give it, it returns the same value(s) as its output.
+
+This is the *key thing to take away from this page*: **generalized linear models are just linear models where $f()$ is some other, more complex function than the identity function**.
+
+$\Large f(\hat{\mu}_i) = b_0 + b_1 x_{i} $
+
+$\Large f(\hat{\mu}_i) = b_0 + b_1 x_{1i} + b_2 x_{2i} + ... b_k x_{ki}$
+
+What this allows is to use the slope/intercept framework of linear regression (and its associated interpreations) with different types of outcome variable.
+
+E.g. linear regression is used for numeric outcome variables, and it produces predictions which range from $-\infty$ to $\infty$
+
+Some outcome variables do not cover this range e.g. dummy-coded categorical variables which take values only of 0 or 1 (though there are many others).
+
+We can use generalized linear models with these other types of variable
+
+We just need a function, $f()$ which *maps* or *links* linear predictions on the $-\infty$ to $\infty$ scale to the actual scale of the outcome variable. We can then use the linear model (slope and intercept) framework very flexibly, with many different types of outcome variable. 
+
+We can include categorical predictors etc. just as we can in linear regression - the *linear* aspect of the framework is the same - it is flexible and highly interpretable.
+
+One way of thinking of these models is that there is *some scale on which the model predictions form a straight line* (or plane/hyperplane, in the case of multiple predictors.
+
+The table below shows some different types of generalized linear model:
+
+| Model type               | Range of predicted values | Example Outcome Variable  |Link name     | Link function $f(\mu)$|
+|--------------------------|------------------------|------------------|-----------------------|-----------------------|
+| Linear Regression        | (-∞, ∞)                | Income           |Identity       | 1 * $μ$               |
+| Logistic Regression      | {0, 1}                 | Died/Survived    |Logit            | $ln(\frac{μ} {1 – μ})$|
+| Poisson Regression       | 0, 1, 2, …  int(∞)     | Number of children|Log              | $ln(μ) $              |
+| Gamma Regression         | (0, ∞)                 | Waiting times     |Inverse          | $\frac{1}{μ} $                |
+
+
+We will now turn our attention to Logistic Regression - which we've seen before- but against the backdrop of the **generalized linear model framework** just outlined.
+<!-- #endregion -->
+
+```{python}
+
+```
