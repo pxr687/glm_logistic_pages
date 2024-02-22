@@ -120,7 +120,7 @@ Specifically, you should use `smf.ols()` to fit each model - remember, if the mo
 
 Your task is to find the most parsiomonious model, as measured by the Akaike Information Criterion (AIC). You end goal is to generate a dataframe like this (call it `results_df`), with the model specifications in one column, and the AIC in another:
 
-![](images/dataframe.png)
+![](images/dataframe.PNG)
 
 You can then sort the dataframe by AIC to find the most parsimonious model (according to the AIC)...
 
